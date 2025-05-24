@@ -113,7 +113,7 @@ def transfer_pb_to_py_type(pb_type: str):
     # pb 支持的类型
     # 标量类型
     # enum 类型
-    # Message 类型
+    # Messagex 类型
     # ANY 类型
     # ONE OF
     # optional 类型

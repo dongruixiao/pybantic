@@ -15,6 +15,7 @@ from pybantic._templates import (
     LabelFieldTemplate,
     MessageTemplate,
     MethodTemplate,
+    OneOfTemplate,
     ServiceTemplate,
     PackageTemplate,
 )
@@ -135,8 +136,35 @@ class _ElementRenderer(_ElementRegistry):
                             index=index,
                         ).render()
                     )
-            # ONEOF
-            # OPTIONAL
+            elif get_origin(field.annotation) == typing.Union:
+                rendered_oneof_fields = []
+                for aindex, arg in enumerate(get_args(field.annotation), start=1):
+                    if issubclass(arg, (Message, Enum)):
+                        arg_type = arg.__name__
+                    elif arg in _scalar_type_py_to_pb:
+                        arg_type = _scalar_type_py_to_pb[arg]
+                    elif isinstance(None, arg):
+                        rendered_oneof_fields.append(
+                            FieldTemplate(
+                                name=f"{name}_string_optional",
+                                type="string",
+                                index=index * 1000 + aindex,
+                                label="optional",
+                            ).render()
+                        )
+                        continue
+                    else:
+                        raise ValueError(f"Unsupported type: {arg}")
+                    rendered_oneof_fields.append(
+                        FieldTemplate(
+                            name=f"{name}_{arg_type}",
+                            type=arg_type,
+                            index=index * 1000 + aindex,
+                        ).render()
+                    )
+                rendered_fields.append(
+                    OneOfTemplate(name=name, fields=rendered_oneof_fields).render()
+                )
             else:
                 raise ValueError(f"Unsupported type: {field.annotation}")
         return rendered_fields

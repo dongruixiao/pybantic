@@ -112,6 +112,17 @@ class EnumTemplate(Template):
     items: list[str]
 
 
+class OneOfTemplate(Template):
+    template: str = """oneof {{name}} {
+    {%- for field in fields %}
+        {{field-}}
+    {% endfor %}
+    }"""
+
+    name: str
+    fields: list[str]
+
+
 if __name__ == "__main__":
     print(
         FieldTemplate(

@@ -23,6 +23,7 @@ class AResponse(Message):
     e: typing.List[ARequest]
     f: typing.Dict[str, str]
     g: typing.Dict[str, ARequest]
+    h: typing.Union[B, ARequest, int, str]
 
 
 class A(Service):

@@ -12,9 +12,19 @@ message AResponse {
     ARequest a = 2;
     B b = 3;
     repeated string c = 4;
-    repeated ARequest e = 5;
-    map<string, string> f = 6;
-    map<string, ARequest> g = 7;
+    oneof d {
+        string d_string = 5001;
+        string d_string_optional = 5002;
+    }
+    repeated ARequest e = 6;
+    map<string, string> f = 7;
+    map<string, ARequest> g = 8;
+    oneof h {
+        B h_B = 9001;
+        ARequest h_ARequest = 9002;
+        int32 h_int32 = 9003;
+        string h_string = 9004;
+    }
 }
 
 service A {

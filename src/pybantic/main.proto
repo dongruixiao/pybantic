@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package main;
+message ARequest {
+    string name = 1;
+    int32 age = 2;
+    double height = 3;
+}
+
+message AResponse {
+    string message = 1;
+    ARequest a = 2;
+    B b = 3;
+    repeated string c = 4;
+    repeated ARequest e = 5;
+    map<string, string> f = 6;
+    map<string, ARequest> g = 7;
+}
+
+service A {
+    rpc hello (ARequest) returns (AResponse);
+}
+
+enum B {
+    // option allow_alias = true;
+    ENUM_UNSPECIFIED = 0; // default value
+    TYPE_1 = 1;
+    TYPE_2 = 2;
+}

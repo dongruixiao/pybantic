@@ -29,3 +29,8 @@ class AResponse(Message):
 class A(Service):
     def hello(self, request: ARequest) -> AResponse:
         return AResponse(message=f"Hello, {request.name}!")
+
+
+class BServer(Service):
+    def hello(self, request: ARequest) -> AResponse:
+        return AResponse(message=f"Hello, {request.name}!")

@@ -31,6 +31,10 @@ service A {
     rpc hello (ARequest) returns (AResponse);
 }
 
+service BServer {
+    rpc hello (ARequest) returns (AResponse);
+}
+
 enum B {
     // option allow_alias = true;
     ENUM_UNSPECIFIED = 0; // default value

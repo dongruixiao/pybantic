@@ -6,7 +6,8 @@ import inspect
 from collections import defaultdict
 from grpc_tools.command import build_package_protos
 from pydantic import BaseModel
-from typing import List, get_args, get_origin
+from typing import get_args, get_origin
+from functools import wraps
 
 from pybantic._templates import (
     EnumItemTemplate,
@@ -35,13 +36,22 @@ class _ElementRegistry:
     __registered_elements: typing.ClassVar[dict[str, dict[ElementType, list[T]]]] = (
         defaultdict(lambda: defaultdict(list))
     )
+    __register_strategy: typing.ClassVar[typing.Literal["user", "all"]] = (  # TODO:
+        "user"
+    )
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, register_strategy: str = "all", **kwargs):
+        cls.__register_strategy = register_strategy
         if _ElementRegistry in cls.__bases__ or any(
             [issubclass(basecls, _ElementRegistry) for basecls in cls.__bases__]
         ):
             clsmodule = cls.__module__
             clsname = cls.__name__
+            if cls.__register_strategy == "user" and not cls.__is_user_defined(
+                clsmodule
+            ):
+                super().__init_subclass__(**kwargs)
+                return
             if clsname not in ElementType.__members__ and clsname not in [
                 "_ElementRenderer",
                 "_ElementCompiler",
@@ -52,7 +62,7 @@ class _ElementRegistry:
 
     @classmethod
     def __check_elder_element_type(cls):
-        for basecls in cls.__bases__:
+        for basecls in cls.mro():
             if basecls.__name__ == "Message":
                 return ElementType.Message
             elif basecls.__name__ == "Service":
@@ -62,6 +72,17 @@ class _ElementRegistry:
         else:
             print(basecls.__name__)
         raise ValueError(f"{cls.__name__} is not a valid ElementType")
+
+    @classmethod
+    def __is_user_defined(cls, user_module: str):
+        import __main__
+
+        main_path = os.path.dirname(os.path.abspath(__main__.__file__))
+        user_module_spec = importlib.util.find_spec(user_module)
+        if not user_module_spec or not user_module_spec.origin:
+            return False
+        user_path = os.path.dirname(os.path.abspath(user_module_spec.origin))
+        return user_path.startswith(main_path)
 
 
 class _ElementRenderer(_ElementRegistry):
@@ -259,7 +280,7 @@ class _ElementRenderer(_ElementRegistry):
             module,
             typed_elements,
         ) in cls._ElementRegistry__registered_elements.items():
-            messages, services = [], []
+            messages, services, enums = [], [], []
             for element_type, elements in typed_elements.items():
                 if element_type == ElementType.Message:
                     messages = cls.__render_messages(elements)
@@ -280,7 +301,8 @@ class _ElementRenderer(_ElementRegistry):
 
 class _ElementCompiler(_ElementRenderer):
     @classmethod
-    def __compile(cls, strict_mode: bool = False):
+    def __compile(cls, strict_mode: bool = False, compile_strategy: str = "user"):
+        cls._ElementRegistry__register_strategy = compile_strategy
         cls._ElementRenderer__render(auto_writing=True)
         for module in cls._ElementRegistry__registered_elements.keys():
             spec = importlib.util.find_spec(module)
@@ -294,13 +316,49 @@ class _ElementCompiler(_ElementRenderer):
             )
 
 
-class Message(_ElementCompiler, BaseModel):
+class ProtobufMixin:
+    def to_protobuf(self):
+        print("to_protobuf")
+        pass
+
+    @classmethod
+    def from_protobuf(cls, protobuf: typing.Any):
+        # TODO: 处理 protobuf 的引入并实例化这些
+        pass
+
+
+class Message(_ElementCompiler, ProtobufMixin, BaseModel):
     pass
 
 
 class Service(_ElementCompiler):
-    pass
+    def __init_subclass__(cls, **kwargs):
+        for name, member in cls.__dict__.items():
+            if inspect.isfunction(member):
+                annotations = member.__annotations__.copy()
+                if len(annotations) == 2:
+                    response = annotations.pop("return")
+                    request = annotations.popitem()[1]
+                    if issubclass(response, _ElementRegistry) and issubclass(
+                        request, _ElementRegistry
+                    ):
+                        setattr(cls, name, cls.__wrap_method(member))
+        super().__init_subclass__(**kwargs)
+
+    @staticmethod
+    def __wrap_method(method):
+        @wraps(method)
+        def wrapper(self, request):
+            request = request.from_protobuf(request)
+            result = method(self, request)
+            return result.to_protobuf()
+
+        return wrapper
 
 
 class Enum(_ElementCompiler, enum.IntEnum):
+    pass
+
+
+class Client:
     pass

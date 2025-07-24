@@ -3,9 +3,7 @@ name = "pybantic"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-authors = [
-    { name = "dongruixiao", email = "dongruixiao@gmail.com" }
-]
+authors = [{ name = "dongruixiao", email = "dongruixiao@gmail.com" }]
 requires-python = ">=3.11"
 dependencies = [
     "grpcio>=1.71.0",
@@ -20,6 +18,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = [
-    "ipython>=9.2.0",
-]
+dev = ["ipython>=9.2.0"]
+
+[tool.uv.workspace]
+members = ["samples/hello_world"]

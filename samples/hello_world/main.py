@@ -1,28 +1,26 @@
-from pybantic.service import service, expose
-from pybantic.message import message
 from pydantic import BaseModel
 
+from pybantic.main import Pybantic
 
-@message
+pb = Pybantic()
+
+
+@pb.message
 class ARequest(BaseModel):
     name: str
 
 
-@message
+@pb.message
 class AResponse(BaseModel):
     message: str
 
 
-@service
+@pb.service
 class HelloService:
-    @expose
+    @pb.expose
     def hello(self, request: ARequest) -> AResponse:
         return AResponse(message=f"Hello, {request.name}!")
 
 
-
-
-# service_instance = HelloService()
-# request = ARequest(name="dongruixiao")
-
-# print(service_instance)
+pb.generate()
+pb.compile()

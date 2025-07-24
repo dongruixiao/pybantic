@@ -22,6 +22,7 @@ from pybantic._templates import (
 )
 
 from pybantic._types import _scalar_type_py_to_pb
+from google.protobuf import json_format
 
 T = typing.TypeVar("T", bound="_ElementRegistry")
 
@@ -318,13 +319,109 @@ class _ElementCompiler(_ElementRenderer):
 
 class ProtobufMixin:
     def to_protobuf(self):
-        print("to_protobuf")
-        pass
+        json_dict = self.model_dump()
+        class_path = self.__module__ + "." + self.__class__.__name__
+        protobuf_class = importlib.import_module(class_path)
+        new_message = protobuf_class()
+        return json_format.ParseDict(json_dict, new_message)
 
     @classmethod
     def from_protobuf(cls, protobuf: typing.Any):
-        # TODO: 处理 protobuf 的引入并实例化这些
-        pass
+        # 创建一个字典来存储转换后的数据
+        data = {}
+
+        # 获取当前类的 pydantic 字段信息
+        pydantic_fields = cls.__pydantic_fields__
+
+        # 遍历 protobuf 消息的所有字段
+        for field_name, field_type in pydantic_fields.items():
+            # 检查 protobuf 是否有这个字段
+            if not hasattr(protobuf, field_name):
+                continue
+
+            value = getattr(protobuf, field_name)
+
+            # 获取字段的类型信息
+            field_annotation = field_type.annotation
+            origin = get_origin(field_annotation)
+
+            # 处理不同类型的字段
+            if origin is None:
+                # 处理基本类型和消息类型
+                if issubclass(field_annotation, Message):
+                    # 递归处理嵌套的消息
+                    data[field_name] = field_annotation.from_protobuf(value)
+                elif issubclass(field_annotation, Enum):
+                    # 处理枚举类型
+                    data[field_name] = field_annotation(value)
+                else:
+                    # 处理基本类型
+                    data[field_name] = value
+            elif origin == list:
+                # 处理列表类型
+                item_type = get_args(field_annotation)[0]
+                if issubclass(item_type, Message):
+                    data[field_name] = [item_type.from_protobuf(item) for item in value]
+                elif issubclass(item_type, Enum):
+                    data[field_name] = [item_type(item) for item in value]
+                else:
+                    data[field_name] = list(value)
+            elif origin == dict:
+                # 处理字典类型
+                key_type, value_type = get_args(field_annotation)
+                if issubclass(value_type, Message):
+                    data[field_name] = {
+                        k: value_type.from_protobuf(v) for k, v in value.items()
+                    }
+                elif issubclass(value_type, Enum):
+                    data[field_name] = {k: value_type(v) for k, v in value.items()}
+                else:
+                    data[field_name] = dict(value)
+            elif origin == typing.Union:
+                if value is None:
+                    data[field_name] = None
+                else:
+                    # 获取所有可能的类型（排除 None）
+                    possible_types = [
+                        t for t in get_args(field_annotation) if t is not type(None)
+                    ]
+
+                    # 尝试匹配实际值类型
+                    actual_type = type(value)
+                    matched_type = None
+
+                    # 首先尝试精确匹配
+                    for possible_type in possible_types:
+                        if actual_type == possible_type:
+                            matched_type = possible_type
+                            break
+
+                    # 如果没有精确匹配，尝试继承关系匹配
+                    if not matched_type:
+                        for possible_type in possible_types:
+                            try:
+                                if isinstance(value, possible_type):
+                                    matched_type = possible_type
+                                    break
+                            except TypeError:
+                                continue
+
+                    # 根据匹配到的类型进行相应转换
+                    if matched_type:
+                        if issubclass(matched_type, Message):
+                            data[field_name] = matched_type.from_protobuf(value)
+                        elif issubclass(matched_type, Enum):
+                            data[field_name] = matched_type(value)
+                        elif matched_type in (int, float, str, bool):
+                            data[field_name] = matched_type(value)
+                        else:
+                            data[field_name] = value
+                    else:
+                        # 如果没有找到匹配的类型，保持原值
+                        data[field_name] = value
+
+        # 使用转换后的数据创建 pydantic 模型实例
+        return cls(**data)
 
 
 class Message(_ElementCompiler, ProtobufMixin, BaseModel):
@@ -357,8 +454,4 @@ class Service(_ElementCompiler):
 
 
 class Enum(_ElementCompiler, enum.IntEnum):
-    pass
-
-
-class Client:
     pass

@@ -2,6 +2,12 @@ version = 1
 revision = 1
 requires-python = ">=3.11"
 
+[manifest]
+members = [
+    "hello-world",
+    "pybantic",
+]
+
 [[package]]
 name = "annotated-types"
 version = "0.7.0"
@@ -127,6 +133,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/bd/0f/0d49f6fe6fa2d09e9820dd9eeb30437e86002303076be2b6ada0fb52b8f2/grpcio_tools-1.71.0-cp313-cp313-win32.whl", hash = "sha256:0ccfb837152b7b858b9f26bb110b3ae8c46675d56130f6c2f03605c4f129be13", size = 948245 },
     { url = "https://files.pythonhosted.org/packages/bb/14/ab131a39187bfea950280b2277a82d2033469fe8c86f73b10b19f53cc5ca/grpcio_tools-1.71.0-cp313-cp313-win_amd64.whl", hash = "sha256:ffff9bc5eacb34dd26b487194f7d44a3e64e752fc2cf049d798021bf25053b87", size = 1119649 },
 ]
+
+[[package]]
+name = "hello-world"
+version = "0.1.0"
+source = { virtual = "samples/hello_world" }
 
 [[package]]
 name = "ipython"

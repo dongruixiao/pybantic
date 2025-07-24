@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package main;
+message ARequest {
+    string name = 1;
+}
+
+message AResponse {
+    string message = 1;
+}
+
+service HelloService {
+}

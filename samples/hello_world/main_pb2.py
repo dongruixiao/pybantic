@@ -24,17 +24,19 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nmain.proto\x12\x04main\"\x18\n\x08\x41Request\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x1c\n\tAResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2\x0e\n\x0cHelloServiceb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nmain.proto\x12\x04main\"\x18\n\x08\x41Request\x12\x0c\n\x04name\x18\x01 \x01(\t\"7\n\tAResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x19\n\x04\x65num\x18\x02 \x01(\x0e\x32\x0b.main.AEnum*2\n\x05\x41\x45num\x12\x14\n\x10\x45NUM_UNSPECIFIED\x10\x00\x12\x05\n\x01\x41\x10\x01\x12\x05\n\x01\x42\x10\x02\x12\x05\n\x01\x43\x10\x03\x32\x38\n\x0cHelloService\x12(\n\x05hello\x12\x0e.main.ARequest\x1a\x0f.main.AResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'main_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
+  _globals['_AENUM']._serialized_start=103
+  _globals['_AENUM']._serialized_end=153
   _globals['_AREQUEST']._serialized_start=20
   _globals['_AREQUEST']._serialized_end=44
   _globals['_ARESPONSE']._serialized_start=46
-  _globals['_ARESPONSE']._serialized_end=74
-  _globals['_HELLOSERVICE']._serialized_start=76
-  _globals['_HELLOSERVICE']._serialized_end=90
+  _globals['_ARESPONSE']._serialized_end=101
+  _globals['_HELLOSERVICE']._serialized_start=155
+  _globals['_HELLOSERVICE']._serialized_end=211
 # @@protoc_insertion_point(module_scope)

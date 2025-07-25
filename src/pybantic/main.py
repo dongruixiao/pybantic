@@ -13,12 +13,14 @@ from pybantic.service import (
     ModelRequest as ModelRequestT,
     ModelResponse as ModelResponseT,
 )
+from pybantic.enums import enum, T as EnumT
 from pybantic._templates import (
     MessageTemplate,
     ServiceTemplate,
     PackageTemplate,
 )
 from pybantic.render import (
+    enums_render,
     messages_render,
     services_render,
     package_render,
@@ -31,6 +33,34 @@ class Pybantic:
     def __init__(self) -> None:
         self.registry: dict[str, dict[str, list]] = defaultdict(
             lambda: defaultdict(list)
+        )
+
+    @overload
+    def enum(
+        self,
+        ecls: type[EnumT],
+    ) -> type[EnumT]: ...
+
+    @overload
+    def enum(
+        self,
+        ecls: None = None,
+        /,
+        *args,
+        **kwargs,
+    ) -> Callable[[type[EnumT]], type[EnumT]]: ...
+
+    def enum(
+        self,
+        ecls: type[EnumT] | None = None,
+        *args,
+        **kwargs,
+    ) -> type[EnumT] | Callable[[type[EnumT]], type[EnumT]]:
+        return enum(
+            ecls,
+            pb=self,
+            *args,
+            **kwargs,
         )
 
     @overload
@@ -114,6 +144,8 @@ class Pybantic:
                     element_list += messages_render(elements)
                 elif element_type == "service":
                     element_list += services_render(elements)
+                elif element_type == "enum":
+                    element_list += enums_render(elements)
                 else:
                     raise ValueError(f"Unsupported element type: {element_type}")
 

@@ -54,7 +54,7 @@ class MessageTemplate(Template):
 
 
 class MethodTemplate(Template):
-    template: str = """rpc {{name}} ({{request}}) returns ({{response}});
+    template: str = """rpc {{name}}({{request}}) returns ({{response}});
 """
 
     name: str

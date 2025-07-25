@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 from pybantic._templates import (
+    EnumItemTemplate,
+    EnumTemplate,
     FieldTemplate,
     LabelFieldTemplate,
     MessageTemplate,
@@ -17,6 +19,7 @@ from pybantic.types import (
     is_enum_type,
     is_map_type,
     is_message_type,
+    is_method_type,
     is_scalar_type,
 )
 
@@ -207,8 +210,8 @@ def service_render(service):
     methods = methods_render(
         [
             method
-            for method in inspect.getmembers(service, inspect.isfunction)
-            if getattr(method, "__expose_as_rpc_interface__", False)
+            for _, method in inspect.getmembers(service, inspect.isfunction)
+            if is_method_type(method)
         ]
     )
     return ServiceTemplate(
@@ -219,6 +222,35 @@ def service_render(service):
 
 def services_render(services):
     return [service_render(service) for service in services]
+
+
+def enum_item_render(index, name):
+    return EnumItemTemplate(
+        name=name,
+        index=index,
+    ).render()
+
+
+def enum_items_render(enum):
+    return [
+        enum_item_render(index, name)
+        for index, (name, _) in enumerate(
+            iterable=enum.__members__.items(),
+            start=1,
+        )
+    ]
+
+
+def enum_render(enum):
+    items = enum_items_render(enum)
+    return EnumTemplate(
+        name=enum.__name__,
+        items=items,
+    ).render()
+
+
+def enums_render(enums):
+    return [enum_render(enum) for enum in enums]
 
 
 def package_render(name, elements, imports=[]):

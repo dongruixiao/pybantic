@@ -1,3 +1,4 @@
+import enum
 from pydantic import BaseModel
 
 from pybantic.main import Pybantic
@@ -10,9 +11,17 @@ class ARequest(BaseModel):
     name: str
 
 
+@pb.enum
+class AEnum(enum.IntEnum):
+    A = 1
+    B = 2
+    C = 3
+
+
 @pb.message
 class AResponse(BaseModel):
     message: str
+    enum: AEnum
 
 
 @pb.service

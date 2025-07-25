@@ -32,12 +32,6 @@ def service(
 ):
 
     def decorator(target_cls: type[T]) -> type[T]:
-        # target_cls_file_path = inspect.getabsfile(target_cls)
-        # __pb2_output_dir__ = os.path.dirname(target_cls_file_path)
-        # __pb2_output_file__ = os.path.basename(target_cls_file_path)
-
-        # setattr(target_cls, "__pb2_output_dir__", __pb2_output_dir__)
-        # setattr(target_cls, "__pb2_output_file__", __pb2_output_file__)
         setattr(target_cls, "__pybantic_type__", "service")
         pb.register(target_cls)
 
@@ -78,11 +72,10 @@ def expose(
         f"`{method.__qualname__}`"
     )
 
-    # setattr(method, "__expose_as_rpc_interface__", True)
-    # return method
+    setattr(method, "__pybantic_type__", "method")
+
     @wraps(method)
-    def wrapper(self: T, request: ModelRequest) -> ModelResponse:
+    def decorator(self: T, request: ModelRequest) -> ModelResponse:
         return method(self, request)
 
-    setattr(wrapper, "__expose_as_rpc_interface__", True)
-    return wrapper
+    return decorator

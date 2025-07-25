@@ -7,7 +7,17 @@ message ARequest {
 
 message AResponse {
     string message = 1;
+    AEnum enum = 2;
+}
+
+enum AEnum {
+    // option allow_alias = true;
+    ENUM_UNSPECIFIED = 0; // default value
+    A = 1;
+    B = 2;
+    C = 3;
 }
 
 service HelloService {
+    rpc hello(ARequest) returns (AResponse);
 }

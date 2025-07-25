@@ -91,12 +91,16 @@ def is_map_type(key_type: Any, value_type: Any) -> bool:
 
 
 def is_message_type(type: Any) -> bool:
-    return getattr(type, "__pybantic_message__", False)
+    return getattr(type, "__pybantic_type__", "") == "message"
 
 
 def is_enum_type(type: Any) -> bool:
-    return getattr(type, "__pybantic_enum__", False)
+    return getattr(type, "__pybantic_type__", "") == "enum"
 
 
 def is_service_type(type: Any) -> bool:
-    return getattr(type, "__pybantic_service__", False)
+    return getattr(type, "__pybantic_type__", "") == "service"
+
+
+def is_method_type(type: Any) -> bool:
+    return getattr(type, "__pybantic_type__", "") == "method"
